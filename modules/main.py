@@ -159,12 +159,45 @@ async def account_login(bot: Client, m: Message):
                         text = await resp.text()
                         url = re.search(r"(https://.*?playlist.m3u8.*?)\"", text).group(1)
 
-            elif 'videos.classplusapp' in url:
-             url = requests.get(f'https://api.classplusapp.com/cams/uploader/video/jw-signed-url?url={url}', headers={'x-access-token': 'eyJhbGciOiJIUzM4NCIsInR5cCI6IkpXVCJ9.eyJpZCI6MzgzNjkyMTIsIm9yZ0lkIjoyNjA1LCJ0eXBlIjoxLCJtb2JpbGUiOiI5MTcwODI3NzQyODkiLCJuYW1lIjoiQWNlIiwiZW1haWwiOm51bGwsImlzRmlyc3RMb2dpbiI6dHJ1ZSwiZGVmYXVsdExhbmd1YWdlIjpudWxsLCJjb3VudHJ5Q29kZSI6IklOIiwiaXNJbnRlcm5hdGlvbmFsIjowLCJpYXQiOjE2NDMyODE4NzcsImV4cCI6MTY0Mzg4NjY3N30.hM33P2ai6ivdzxPPfm01LAd4JWv-vnrSxGXqvCirCSpUfhhofpeqyeHPxtstXwe0'}).json()['url']
 
-            elif '/master.mpd' in url:
-             id =  url.split("/")[-2]
-             url =  "https://d26g5bnklkwsh4.cloudfront.net/" + id + "/master.m3u8"
+            elif 'classplusapp' in url or "testbook.com" in url or "classplusapp.com/drm" in url or "media-cdn.classplusapp.com/drm" in url:
+                url, contentId = url.split('&contentHashIdl=')
+                
+                headers = {
+                    'host': 'api.classplusapp.com',
+                    'x-access-token': f'{working_token}',    
+                    'accept-language': 'EN',
+                    'api-version': '18',
+                    'app-version': '1.4.73.2',
+                    'build-number': '35',
+                    'connection': 'Keep-Alive',
+                    'content-type': 'application/json',
+                    'device-details': 'Xiaomi_Redmi 7_SDK-32',
+                    'device-id': 'c28d3cb16bbdac01',
+                    'region': 'IN',
+                    'user-agent': 'Mobile-Android',
+                    'webengage-luid': '00000187-6fe4-5d41-a530-26186858be4c',
+                    'accept-encoding': 'gzip'
+                }
+                
+                params = {
+                    'contentId': contentId,
+                    'offlineDownload': "false"
+                }
+
+                res = requests.get("https://api.classplusapp.com/cams/uploader/video/jw-signed-url", params=params, headers=headers).json()
+                
+                if "testbook.com" in url or "classplusapp.com/drm" in url or "media-cdn.classplusapp.com/drm" in url:
+                    url = res['drmUrls']['manifestUrl']
+                    
+                else:
+                    url = res["url"]
+
+            elif "d1d34p8vz63oiq" in url or "sec1.pw.live" in url:
+                url = f"https://anonymouspwplayer-907e62cf4891.herokuapp.com/pw?url={url}?token={working_token}"
+                
+            else:
+                url = url
 
             name1 = links[i][0].replace("\t", "").replace(":", "").replace("/", "").replace("+", "").replace("#", "").replace("|", "").replace("@", "").replace("*", "").replace(".", "").replace("https", "").replace("http", "").strip()
             name = f'{str(count).zfill(3)}) {name1[:60]}'
