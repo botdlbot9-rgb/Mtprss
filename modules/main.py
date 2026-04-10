@@ -58,8 +58,6 @@ async def restart_handler(_, m):
     await m.reply_text("♦ 𝐒𝐭𝐨𝐩𝐩𝐞𝐭 ♦", True)
     os.execl(sys.executable, sys.executable, *sys.argv)
 
-
-
 @bot.on_message(filters.command(["upload"]))
 async def account_login(bot: Client, m: Message):
     editable = await m.reply_text('sᴇɴᴅ ᴍᴇ .ᴛxᴛ ғɪʟᴇ  ⏍')
@@ -117,8 +115,6 @@ async def account_login(bot: Client, m: Message):
     except Exception:
             res = "UN"
     
-    
-
     await editable.edit(Ashu.C1_TEXT)
     input3: Message = await bot.listen(editable.chat.id)
     raw_text3 = input3.text
@@ -128,7 +124,14 @@ async def account_login(bot: Client, m: Message):
         MR = highlighter 
     else:
         MR = raw_text3
-   
+
+    # ----- NEW: Token input for PW/ClassPlus -----
+    await editable.edit("**Enter Your PW/Classplus Working Token\n\nOtherwise Send No**")
+    input4: Message = await bot.listen(editable.chat.id)
+    working_token = input4.text
+    await input4.delete(True)
+    # ---------------------------------------------
+
     await editable.edit(Ashu.T1_TEXT)
     input6 = message = await bot.listen(editable.chat.id)
     raw_text6 = input6.text
@@ -159,12 +162,49 @@ async def account_login(bot: Client, m: Message):
                         text = await resp.text()
                         url = re.search(r"(https://.*?playlist.m3u8.*?)\"", text).group(1)
 
-            elif 'videos.classplusapp' in url:
-             url = requests.get(f'https://api.classplusapp.com/cams/uploader/video/jw-signed-url?url={url}', headers={'x-access-token': 'eyJhbGciOiJIUzM4NCIsInR5cCI6IkpXVCJ9.eyJpZCI6MzgzNjkyMTIsIm9yZ0lkIjoyNjA1LCJ0eXBlIjoxLCJtb2JpbGUiOiI5MTcwODI3NzQyODkiLCJuYW1lIjoiQWNlIiwiZW1haWwiOm51bGwsImlzRmlyc3RMb2dpbiI6dHJ1ZSwiZGVmYXVsdExhbmd1YWdlIjpudWxsLCJjb3VudHJ5Q29kZSI6IklOIiwiaXNJbnRlcm5hdGlvbmFsIjowLCJpYXQiOjE2NDMyODE4NzcsImV4cCI6MTY0Mzg4NjY3N30.hM33P2ai6ivdzxPPfm01LAd4JWv-vnrSxGXqvCirCSpUfhhofpeqyeHPxtstXwe0'}).json()['url']
+            # ----- NEW: ClassPlus logic (replaces old) -----
+            elif 'classplusapp' in url or "testbook.com" in url or "classplusapp.com/drm" in url or "media-cdn.classplusapp.com/drm" in url:
+                # Split contentHashIdl
+                url, contentId = url.split('&contentHashIdl=')
+                
+                headers = {
+                    'host': 'api.classplusapp.com',
+                    'x-access-token': f'{working_token}',    
+                    'accept-language': 'EN',
+                    'api-version': '18',
+                    'app-version': '1.4.73.2',
+                    'build-number': '35',
+                    'connection': 'Keep-Alive',
+                    'content-type': 'application/json',
+                    'device-details': 'Xiaomi_Redmi 7_SDK-32',
+                    'device-id': 'c28d3cb16bbdac01',
+                    'region': 'IN',
+                    'user-agent': 'Mobile-Android',
+                    'webengage-luid': '00000187-6fe4-5d41-a530-26186858be4c',
+                    'accept-encoding': 'gzip'
+                }
+                
+                params = {
+                    'contentId': contentId,
+                    'offlineDownload': "false"
+                }
+
+                res = requests.get("https://api.classplusapp.com/cams/uploader/video/jw-signed-url", params=params, headers=headers).json()
+                
+                if "testbook.com" in url or "classplusapp.com/drm" in url or "media-cdn.classplusapp.com/drm" in url:
+                    url = res['drmUrls']['manifestUrl']
+                else:
+                    url = res["url"]
+            # --------------------------------------------
+
+            # ----- NEW: PW logic (PhysicsWallah) -----
+            elif "d1d34p8vz63oiq" in url or "sec1.pw.live" in url:
+                url = f"https://anonymouspwplayer-907e62cf4891.herokuapp.com/pw?url={url}?token={working_token}"
+            # ------------------------------------------
 
             elif '/master.mpd' in url:
-             id =  url.split("/")[-2]
-             url =  "https://d26g5bnklkwsh4.cloudfront.net/" + id + "/master.m3u8"
+                id =  url.split("/")[-2]
+                url =  "https://d26g5bnklkwsh4.cloudfront.net/" + id + "/master.m3u8"
 
             name1 = links[i][0].replace("\t", "").replace(":", "").replace("/", "").replace("+", "").replace("#", "").replace("|", "").replace("@", "").replace("*", "").replace(".", "").replace("https", "").replace("http", "").strip()
             name = f'{str(count).zfill(3)}) {name1[:60]}'
@@ -181,8 +221,8 @@ async def account_login(bot: Client, m: Message):
 
             try:  
                 
-                cc = f'**[ 🎥 ] Vid_ID:** {str(count).zfill(3)}.** {𝗻𝗮𝗺𝗲𝟭}{MR}.mkv\n✉️ 𝐁𝐚𝐭𝐜𝐡 » **{raw_text0}**'
-                cc1 = f'**[ 📁 ] Pdf_ID:** {str(count).zfill(3)}. {𝗻𝗮𝗺𝗲𝟭}{MR}.pdf \n✉️ 𝐁𝐚𝐭𝐜𝐡 » **{raw_text0}**'
+                cc = f'**[ 🎥 ] Vid_ID:** {str(count).zfill(3)}.** {name1}{MR}.mkv\n✉️ 𝐁𝐚𝐭𝐜𝐡 » **{raw_text0}**'
+                cc1 = f'**[ 📁 ] Pdf_ID:** {str(count).zfill(3)}. {name1}{MR}.pdf \n✉️ 𝐁𝐚𝐭𝐜𝐡 » **{raw_text0}**'
                 if "drive" in url:
                     try:
                         ka = await helper.download(url, name)
@@ -210,6 +250,7 @@ async def account_login(bot: Client, m: Message):
                 else:
                     Show = f"❊⟱ 𝐃𝐨𝐰𝐧𝐥𝐨𝐚𝐝𝐢𝐧𝐠 ⟱❊ »\n\n📝 𝐍𝐚𝐦𝐞 » `{name}\n⌨ 𝐐𝐮𝐥𝐢𝐭𝐲 » {raw_text2}`\n\n**🔗 𝐔𝐑𝐋 »** `{url}`"
                     prog = await m.reply_text(Show)
+                    # Purane helper function ke hisaab se call (url, cmd, name)
                     res_file = await helper.download_video(url, cmd, name)
                     filename = res_file
                     await prog.delete(True)
