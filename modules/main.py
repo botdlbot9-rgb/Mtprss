@@ -165,7 +165,7 @@ async def upload_handler(bot: Client, m: Message):
                 except Exception as e:
                     await m.reply_text(f"❌ API exception: {e}")
                     continue
-            # else: direct mp4/m3u8/mpd link (no contentHashIdl) -> download directly
+            # else: direct mp4/m3u8/mpd link
 
         # PW (PhysicsWallah)
         elif "d1d34p8vz63oiq" in url or "sec1.pw.live" in url:
@@ -175,12 +175,10 @@ async def upload_handler(bot: Client, m: Message):
             encoded_url = quote(url, safe='')
             url = f"https://anonymouspwplayer-907e62cf4891.herokuapp.com/pw?url={encoded_url}&token={working_token}"
 
-        # General MPD to M3U8 (for non-ClassPlus, e.g., cloudfront)
+        # General MPD to M3U8 (for non-ClassPlus)
         elif '/master.mpd' in url and 'classplusapp' not in url:
             id_ = url.split("/")[-2]
             url = f"https://d26g5bnklkwsh4.cloudfront.net/{id_}/master.m3u8"
-
-        # No .mpd to .m3u8 conversion for ClassPlus (yt-dlp handles .mpd)
 
         name1 = links[i][0].replace("\t", "").replace(":", "").replace("/", "").replace("+", "").replace("#", "").replace("|", "").replace("@", "").replace("*", "").replace(".", "").replace("https", "").replace("http", "").strip()
         name = f'{str(count).zfill(3)}) {name1[:60]}'
@@ -229,19 +227,28 @@ async def main():
         site = web.TCPSite(runner, "0.0.0.0", PORT)
         await site.start()
         print(f"Web server started on port {PORT}")
-        await asyncio.Future()  # keep running
+        # Keep the web server running
+        await asyncio.Event().wait()
 
-# ========== FIXED MAIN STARTUP (Render compatible) ==========
-async def start_all():
+# ========== ORIGINAL LOOP STYLE (with run_forever and stop) ==========
+async def start_bot():
     await bot.start()
     print("Bot started ✅")
-    if WEBHOOK:
-        await main()  # runs web server forever
-    else:
-        await asyncio.Future()  # keep bot alive
+
+async def start_web():
+    await main()
 
 if __name__ == "__main__":
+    print("Bot starting...")
+    loop = asyncio.get_event_loop()
     try:
-        asyncio.run(start_all())
+        # Create tasks properly (call coroutines, not objects)
+        loop.create_task(start_bot())
+        if WEBHOOK:
+            loop.create_task(start_web())
+        loop.run_forever()
     except KeyboardInterrupt:
-        print("Bot stopped.")
+        print("Stopping...")
+    finally:
+        loop.stop()
+        loop.close()
