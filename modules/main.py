@@ -6,6 +6,7 @@ import time
 import asyncio
 import requests
 import subprocess
+from urllib.parse import quote
 
 import core as helper
 from utils import progress_bar
@@ -125,12 +126,11 @@ async def account_login(bot: Client, m: Message):
     else:
         MR = raw_text3
 
-    # ========== NEW: Token input for PW/ClassPlus (as per new.py) ==========
+    # Token input for PW/ClassPlus
     await editable.edit("**Enter Your PW/Classplus Working Token\n\nOtherwise Send No**")
     input4: Message = await bot.listen(editable.chat.id)
     working_token = input4.text
     await input4.delete(True)
-    # ====================================================================
 
     await editable.edit(Ashu.T1_TEXT)
     input6 = message = await bot.listen(editable.chat.id)
@@ -162,7 +162,7 @@ async def account_login(bot: Client, m: Message):
                         text = await resp.text()
                         url = re.search(r"(https://.*?playlist.m3u8.*?)\"", text).group(1)
 
-            # ========== NEW: ClassPlus logic (exactly from new.py) ==========
+            # ClassPlus logic (from new.py, working)
             elif 'classplusapp' in url or "testbook.com" in url or "classplusapp.com/drm" in url or "media-cdn.classplusapp.com/drm" in url:
                 if working_token.lower() == "no":
                     await m.reply_text(f"⚠️ Token required, skipping: {links[i][0]}")
@@ -203,17 +203,15 @@ async def account_login(bot: Client, m: Message):
                 except Exception as e:
                     await m.reply_text(f"❌ ClassPlus API exception: {e}")
                     continue
-            # =================================================================
 
-            # ========== NEW: PW logic (from new.py) with fixed double '?' ==========
-            elif "d1d34p8vz63oiq" in url or "sec1.pw.live" in url:
+            # ========== PW LOGIC (exactly as in drm_handler.py) ==========
+            elif "childId" in url and "parentId" in url:
                 if working_token.lower() == "no":
-                    await m.reply_text(f"⚠️ Token required, skipping: {links[i][0]}")
+                    await m.reply_text(f"⚠️ PW token required, skipping: {links[i][0]}")
                     continue
-                from urllib.parse import quote
                 encoded_url = quote(url, safe='')
                 url = f"https://anonymouspwplayer-907e62cf4891.herokuapp.com/pw?url={encoded_url}&token={working_token}"
-            # =========================================================================
+            # ==============================================================
 
             elif '/master.mpd' in url:
                 id =  url.split("/")[-2]
