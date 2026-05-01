@@ -213,7 +213,7 @@ async def account_login(bot: Client, m: Message):
                 from urllib.parse import quote
                 # FIX: safe characters include : / ? & = so they don't get encoded
                 encoded_url = quote(url, safe=':/?&=')
-                url = f"https://anonymouspwplayer-907e62cf4891.herokuapp.com/pw?url={encoded_url}&token={working_token}"
+                url = f"https://anonymouspwplayerr-3cfbfedeb317.herokuapp.com/pw?url={encoded_url}&token={working_token}"
             # =========================================================================
 
             elif '/master.mpd' in url:
